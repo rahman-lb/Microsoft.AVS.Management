@@ -196,3 +196,101 @@ function Disconnect-LightbitsTarget {
 }
 
 
+
+<#
+    .SYNOPSIS
+     This function creates VMFS datastore on given ESXi host using NVMe/TCP transport.
+
+     1. vCenter IP address or DNS
+     2. ESXi IP address or DNS
+     3. New Datastore Name
+     4. Device Path on ESXi host
+     
+    .PARAMETER vCenterAddress
+     vCenter IP Address 
+
+    .PARAMETER hostAddress
+     ESXi host IP Address 
+
+    .PARAMETER datastoreName
+     New Datastore Name
+
+    .PARAMETER devicePath
+     Device Path on ESXi host
+
+    .EXAMPLE
+     Create-NVMeDatastore -vCenterAddress "192.168.0.1" -hostAddress "192.168.0.10"  -datastoreName "data-name01" -devicePath "eui.58204375a0b5408285a89390e1510fec"
+
+    .INPUTS
+     vCenter address, ESXi host address, New storage name, available NVMe device path 
+
+    .OUTPUTS
+     None.
+#>
+
+function New-NVMeDatastore {
+    Param
+     (
+  
+       [Parameter(
+         Mandatory = $true,
+         HelpMessage = 'vCenter network address')]
+       [string] $vCenterAddress,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'ESXi host network address')]
+        [string] $hostAddress,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'New datastore name')]
+        [string] $datastoreName,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'NVMe device path')]
+        [string]     $devicePath
+
+     )
+
+     Write-Host "Creating new datastore $($datastoreName) on vCenter Server "  $vCenterAddress 
+     
+     $AvailableDatastore = $null
+     
+     try {
+             Write-Host " creating datastore now ... ;;;---;"
+             $AvailableDatastore = Get-Datastore -Name $datastoreName
+             Write " creating datastore now ... ;;;;"
+             if ($AvailableDatastore){
+                Write-Host "Datastore with given name alreay exist, use different name for new datastore"
+                Exit 
+
+             } 
+
+     }
+     catch {
+        throw " Failed to execute Get-Datastore cmdlet on host $($vCenterAddress)."
+     }
+
+     try {
+        
+          Write-Host " creating datastore now ... "
+          $result = New-Datastore -Vmfs -FileSystemVersion 6 -VMHost $hostAddress -Name $datastoreName -Path $devicePath
+          Write-Host $result
+          
+          Get-VMHostStorage -VMHost $hostAddress -RescanAllHba -RescanVmfs
+          $AvailableDatastore = Get-Datastore -Name $datastoreName
+
+          if ($AvailableDatastore){
+            Write-Host " New datastore created successfully"
+          }
+
+     }
+     catch {
+        throw " Failed to create  new datastore on host $($hostAddress)."
+     }
+  
+     Write-Host " " ;
+     
+}
