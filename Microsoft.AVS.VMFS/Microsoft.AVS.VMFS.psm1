@@ -946,3 +946,200 @@ function New-NVMeTCPPortGroups {
     }
 
 }
+
+
+<#
+    .SYNOPSIS
+     This function add and configure NVMeTCP Network for ESXi on Distributed Switch.
+
+     1. Distributed Switch Name
+     2. List of ESXi host(s) Network Address
+
+    .PARAMETER DSwitchName
+     Distributed Switch Name
+    
+    .PARAMETER Hosts
+     List of ESXi host(s) Network Address
+
+    .EXAMPLE
+     Add-NVMeTCPHostToDisSwitch -DSwitchName "DSwitchName-001"  -Hosts "Host-01", "Host-02" 
+
+    .INPUTS
+     Distributed Switch Name, List of ESXi host(s) Network Address
+
+    .OUTPUTS
+     None.
+#>
+function Add-NVMeTCPHostToDisSwitch {
+    [CmdletBinding()]
+    [AVSAttribute(10, UpdatesSDDC = $false)]
+   
+    Param
+    (
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'Distributed Switch Name')]
+        [String] $DSwitchName,
+                
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'List of ESXi hosts(s)')]
+        [string[]] $Hosts  
+    )
+
+    Write-Host "Adding ESXi host(s) to Distributed Switch " $DSwitchName
+    Write-Host " " ;
+
+    $DSName = Get-VDSwitch -Name $DSwitchName -ErrorAction Ignore
+    if (-not $DSName) {
+        throw "Distributed $DSwitchName does not exist."
+    }
+
+    if (($null -eq $Hosts) -or ($Hosts.Length -eq 0) ) {
+        throw "Provide ESXi host(s) network addresses."
+    }
+
+    foreach ($Host in $Hosts){
+    try {
+ 
+          $Result = Add-VDSwitchVMHost -VDSwitch $DSwitchName  -VMHost $Host
+          Write-Host "Added host "$Host
+          $Nics = Get-VMHostNetworkAdapter -VMHost $Host -Physical
+          if ($Null -eq $Nics){
+              Write-Host " No physical Nic found on host "$Host
+              continue
+          }
+
+         foreach ($Nic in $Nics){
+              if($Nic.ExtensionData.LinkSpeed.SpeedMb -ge 10000){
+                 Get-VDSwitch $DSwitchName | Add-VDSwitchPhysicalNetworkAdapter -VMHostPhysicalNic $Nic -Confirm:$false
+                 Write-Host "VMNIC added to distributed switch "$Nic.Name
+
+              }
+         }
+     }
+       
+    catch {
+         Write-Error "Error adding ESXi host to DistributeSwitch "$_.Exception
+    }
+  }
+ }
+
+
+<#
+    .SYNOPSIS
+     This function configure VMKernel Port for a given ESXi host.
+
+     1. Distributed Switch Name
+     2. List of Distributed Port Groups
+     3. ESXi host(s) Network Address
+     4. List Datapath IP Address
+     5. SubNet Mask Address 
+
+    .PARAMETER DSwitchName
+     Distributed Switch Name
+    
+    .PARAMETER PortGroups
+     List of Distributed Port Groups
+    
+    .PARAMETER Host
+     ESXi host Network Address
+    
+    .PARAMETER VmKernelAddresses
+     List of VMKernel network addresses
+    
+    .PARAMETER SubNetMask
+     SubNetMask Network Address
+    
+
+    .EXAMPLE
+     Add-NVMeTCPVmKernelPorts -DSwitchName "DSwitchName-001"  -PortGroups "PG-01","PG-02" -Host "rack13-server66.lbits" -VmKernelAddresses "IpAddress-01","IpAddress-02" -SubNetMask "255.255.255.224"  
+
+    .INPUTS
+     Distributed Switch Name, List of ESXi host(s) Network Address
+
+    .OUTPUTS
+     None.
+#>
+function Add-NVMeTCPVmKernelPorts {
+    [CmdletBinding()]
+    [AVSAttribute(10, UpdatesSDDC = $false)]
+   
+    Param
+    (
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'Distributed Switch Name')]
+        [String] $DSwitchName,
+                
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'List of portgroup Name')]
+        [string[]] $PortGroups,
+        
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'ESXi host network address')]
+        [string] $Host,
+
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'List VMkernel network addresses')]
+        [string[]] $VmKernelAddresses,
+        
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'SubNetMask Network Address')]
+        [string] $SubNetMask
+                 
+    )
+
+    Write-Host "Configuring ESXi host(s) VMKernel Ports " $Host
+    Write-Host " " ;
+
+    $HostObj = Get-VMHost -Name $Host
+
+    $VDSwitch = Get-VirtualSwitch -VMHost $HostObj -Name $DSwitchName
+    if (-not $VDSwitch) {
+        throw "Distributed $DSwitchName does not exist."
+    }
+
+    $AvailablePortGroups = Get-VDPortgroup -VDSwitch $DSwitchName | Select -Property Name
+    
+    if ($AvailablePortGroups -and $AvailablePortGroups.Length -gt 0) {
+        $i = 0
+               
+        foreach($item in $PortGroups){
+
+            Write-Host "PortGroup "$item
+          
+            if($AvailablePortGroups.name.contains($item)){
+            
+              Write-Host "Configuring PortGroup "$item 
+              Write-Host "Configuring IP  "$VmKernelAddresses[$i] 
+              $Result = New-VMHostNetworkAdapter -VMHost $HostObj -VirtualSwitch $VDSwitch -PortGroup $item  -IP $VmKernelAddresses[$i] -SubnetMask $SubNetMask
+              $i=$i+1
+              if($Null -ne $Result){
+
+                 Write-Host "Enabling NVMe/TCP Service on vmknic "$Result.Name
+                 $HostEsxcli = Get-EsxCli -VMHost $Host
+                 $IsEnabled = $HostEsxcli.network.ip.interface.tag.add($Result.Name, 'NVMeTCP')
+                 if ($IsEnabled) {
+                    Write-Host "NVMe/TCP Service enabled successfully "$IsEnabled
+                 }
+                 else {
+                    Write-Host "Failed to enable NVMe/TCP Service " $IsEnabled
+                }
+              } 
+ 
+            } 
+            else {
+                Write-Host "PortGroup is not available "$item
+            }
+
+            Write-Host " "
+                  
+          }
+        }
+    }
+
