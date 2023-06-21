@@ -121,7 +121,7 @@ function Set-VmfsIscsi {
 #>
 function New-VmfsDatastore {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
     Param (
         [Parameter(
             Mandatory=$true,
