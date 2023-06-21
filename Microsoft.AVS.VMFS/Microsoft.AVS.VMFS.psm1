@@ -1,4 +1,4 @@
-using module Microsoft.AVS.Management
+#using module Microsoft.AVS.Management
 
 <#
     .SYNOPSIS
@@ -647,7 +647,7 @@ function Remove-VMHostStaticIScsiTargets {
 #>
 function Connect-NVMeTCPTarget {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
     Param
     (
         [Parameter(
@@ -730,8 +730,8 @@ function Connect-NVMeTCPTarget {
 
         foreach ($StorageAdapter in $StorageAdapters) {
 
-            if (($StorageAdapter.Status -eq "online") -and ($StorageAdapter.Driver -eq "nvmetcp")) {
-
+            if (($StorageAdapter.Driver -eq "nvmetcp")) {
+            
                 if ($HostEsxcli) {
                     $Name = $StorageAdapter.Name.ToString().Trim()
                     Write-Host "Connecting Adapter $($Name) to storage controller"
