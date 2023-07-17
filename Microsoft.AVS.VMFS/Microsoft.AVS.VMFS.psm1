@@ -533,7 +533,7 @@ function Sync-VMHostStorage {
 #>
 function Sync-ClusterVMHostStorage {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false, AutomationOnly = $true)]
+    #[AVSAttribute(10, UpdatesSDDC = $false, AutomationOnly = $true)]
     Param (
         [Parameter(
                 Mandatory=$true,
@@ -1275,7 +1275,6 @@ function New-NVMeTCPPortGroups {
             Mandatory = $true,
             HelpMessage = 'Distributed Switch Name')]
         [String] $DSwitchName,
-                
         [Parameter(
             Mandatory = $true,
             HelpMessage = 'List of portgroup Name')]
