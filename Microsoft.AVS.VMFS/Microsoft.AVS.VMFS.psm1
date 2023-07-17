@@ -1508,3 +1508,67 @@ function Add-NVMeTCPVmKernelPorts {
         }
     }
 
+
+
+    <#
+    .SYNOPSIS
+     This function collects all ESXi host under a given vSphere Cluster.
+
+     1. vSphere Cluster Name
+     
+     
+    .PARAMETER HostAddress
+     vSphere Cluster Name
+
+    
+    .EXAMPLE
+     Get-Hosts -ClusterName "vSphere-cluster-001"   
+
+    .INPUTS
+     vSphere Cluster Name
+
+    .OUTPUTS
+     None.
+#>
+
+function Get-Hosts {
+    [CmdletBinding()]
+    [AVSAttribute(10, UpdatesSDDC = $false)]
+
+    Param
+    (
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'vSphere Cluster Name')]
+        [String] $ClusterName
+
+    )
+
+    Write-Host "Connecting to vSphere Cluster " $ClusterName
+    Write-Host " " ;
+
+    $Cluster = Get-Cluster -Name $ClusterName -ErrorAction Ignore
+    if (-not $Cluster) {
+        throw "Cluster $ClusterName does not exist."
+    }
+
+    $ConnectedHosts = [System.Collections.ArrayList]::new()
+    $VmHosts = $Cluster | Get-VMHost 
+    foreach ($VmHost in $VMHosts) {
+
+        if ($VmHost.ConnectionState -ne "Connected") {
+            Write-Host "ESXi host $($VmHost.Name)  must be in connected state, ignoring operation because of current state "$VmHost.ConnectionState
+            Write-Host ""
+            continue
+        }
+       $IsAdded=$ConnectedHosts.Add($VmHost)     
+    }
+    
+
+    foreach ($Item in $ConnectedHosts) {
+       Write-Host  "$($Item.Id)  $($Item.name)  $($Item.PowerState)   $($Item.State)  $($Item.ExtensionData.hardware.SystemInfo.Uuid)  $($Item.ExtensionData.hardware.SystemInfo.QualifiedName.value)"
+   }    
+    
+    Write-Host ""
+    
+}
