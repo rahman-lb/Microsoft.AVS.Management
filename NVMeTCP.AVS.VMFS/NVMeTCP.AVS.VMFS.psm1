@@ -1,4 +1,4 @@
-using module Microsoft.AVS.Management
+#using module Microsoft.AVS.Management
 
 <#
     .SYNOPSIS
@@ -58,7 +58,7 @@ using module Microsoft.AVS.Management
 
 function Connect-NVMeTCPTarget {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
     Param
     (
         [Parameter(
@@ -192,7 +192,7 @@ function Connect-NVMeTCPTarget {
 
 function Disconnect-NVMeTCPTarget {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
    
     Param
     (
@@ -296,7 +296,7 @@ function Disconnect-NVMeTCPTarget {
 
 function New-NVMeDatastore {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
    
     Param
     (
@@ -394,7 +394,7 @@ function New-NVMeDatastore {
 
 function Remove-NVMeDatastore {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
    
     Param
     (
@@ -466,7 +466,7 @@ function Remove-NVMeDatastore {
 
 Function Mount-NVMeDatastore {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
    
     Param(
         [Parameter(
@@ -557,7 +557,7 @@ Function Mount-NVMeDatastore {
 
 Function Dismount-NVMeDatastore {
     #[CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
       
     Param(
         [Parameter(
