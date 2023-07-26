@@ -1206,3 +1206,69 @@ function Get-Hosts {
     Write-Host ""
     
 }
+
+
+<#
+    .SYNOPSIS
+     This function list all VMFS datastores accessible to host(s) under the given ESXi Cluster.
+
+     1. vSphere Cluster Name
+          
+    .PARAMETER ClusterName
+     vSphere Cluster Name
+    
+    .EXAMPLE
+     Get-VmfsDatastore -ClusterName "vSphere-cluster-001"  
+
+    .INPUTS
+     vSphere Cluster Name
+
+    .OUTPUTS
+     None.
+#>
+
+function Get-VmfsDatastore {
+    [CmdletBinding()]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
+   
+    Param
+    (
+  
+        [Parameter(
+            Mandatory = $true,
+            HelpMessage = 'vSphere Cluster Name')]
+        [string] $ClusterName
+
+    )
+       
+    Write-Host "Collecting all available VMFS datastores accessible to ESXi host(s) in the cluster "  $ClusterName
+        
+    $ClusterName = $ClusterName.Trim()
+
+    $Cluster = Get-Cluster -Name $ClusterName -ErrorAction Ignore
+    if (-not $Cluster) {
+        throw "Cluster $ClusterName does not exist."
+    }
+
+    $VmHosts = $Cluster | Get-VMHost -ErrorAction Ignore 
+    if (-not $VmHosts) {
+        throw "No ESXi host found under $($ClusterName)."
+    }
+
+
+    $Datastores = Get-VMHost -Name $VmHosts | Get-Datastore | Where-Object {$_.Type -match "VMFS"} | Get-Unique
+
+    if ( -not $Datastores) {
+        Write-Host "No Datastore found under the given cluster."
+        return
+      
+    }
+
+    foreach ($Datastore in $Datastores){
+     Write-Output $Datastore      
+        
+    }
+
+    Write-Host " " ;
+     
+}
