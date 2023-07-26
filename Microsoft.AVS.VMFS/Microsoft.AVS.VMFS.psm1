@@ -261,7 +261,7 @@ function Dismount-VmfsDatastore {
         throw "Datastore $DatastoreName is of type $($Datastore.Type). This cmdlet can only process VMFS datastores."
     }
 
-    Write-Host "Unmounting datastore $DatastoreName from all hosts and detaching the SCSI device associated with it..."
+    Write-Host "Unmounting datastore $DatastoreName from all hosts, detaching SCSI devices, NVMe/TCP devices are not detached."
     $VMHosts = $Cluster | Get-VMHost
     foreach ($VMHost in $VMHosts) {
         $IsDatastoreConnectedToHost = Get-Datastore -VMHost $VMHost | Where-Object {$_.name -eq $DatastoreName}
@@ -278,7 +278,15 @@ function Dismount-VmfsDatastore {
             $HostStorageSystem = Get-View $VMHost.Extensiondata.ConfigManager.StorageSystem
 
             $HostStorageSystem.UnmountVmfsVolume($VmfsUuid) | Out-Null
-            $HostStorageSystem.DetachScsiLun($ScsiLunUuid) | Out-Null
+            $HostViewDiskName = $Datastore.ExtensionData.Info.vmfs.extent[0].Diskname;
+
+            if(($null -ne $HostViewDiskName) -and ($HostViewDiskName.StartsWith("eui."))){
+               Write-Host "Device UUID $($VmfsUuid) is an NVMe/TCP volume, not required to be detached, and can be mounted back to host as needed."  
+            }
+            else {
+                  $HostStorageSystem.DetachScsiLun($ScsiLunUuid) | Out-Null
+            }      
+           
             $VMHost | Get-VMHostStorage -RescanAllHba -RescanVmfs | Out-Null
         }
     }
