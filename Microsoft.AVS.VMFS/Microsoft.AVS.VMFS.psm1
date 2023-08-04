@@ -1533,7 +1533,7 @@ function Add-NVMeTCPVmKernelPorts {
 
 function Get-Hosts {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
 
     Param
     (
