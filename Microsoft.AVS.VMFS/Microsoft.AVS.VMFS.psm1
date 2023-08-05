@@ -1195,7 +1195,7 @@ function Get-VmfsDatastore {
 
 function Get-VmfsHosts {
     [CmdletBinding()]
-    [AVSAttribute(10, UpdatesSDDC = $false)]
+    #[AVSAttribute(10, UpdatesSDDC = $false)]
 
     Param
     (
