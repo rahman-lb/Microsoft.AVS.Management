@@ -1545,3 +1545,39 @@ function New-NVMeTCPAdapter {
     Write-Host ""
 
 }  
+
+function Get-VMHostClusters {
+    [CmdletBinding()]
+    # [AVSAttribute(10, UpdatesSDDC = $false)]
+    Param
+    (
+    )
+
+    Write-Host "Collecting all vSphere cluster(s) with summary information."
+    Write-Host " " ;
+
+    $Clusters = Get-Cluster -ErrorAction Ignore 
+    if (-not $Clusters) {
+        "Cluster does not exist, NamedOutputs will be empty"
+          
+    }
+   
+    $ClusterObj = [PSCustomObject]@{
+        Name          = ''
+        Id            = ''
+        OverallStatus = ''
+        Summary       = ''
+    }
+    
+    $NamedOutputs = @{}
+    foreach ($Cluster in $Clusters) {
+        $ClusterObj.Id = $Cluster.Id
+        $ClusterObj.Name = $Cluster.Name
+        $ClusterObj.OverallStatus = $Cluster.ExtensionData.OverallStatus
+        $ClusterObj.Summary = ($Cluster.ExtensionData.Summary) 
+        $NamedOutputs.Add($Cluster.Name, ($ClusterObj | ConvertTo-Json -Depth 5))
+    }
+      
+    Set-Variable -Name NamedOutputs -Value $NamedOutputs -Scope Global   
+    Write-Host ""
+}
