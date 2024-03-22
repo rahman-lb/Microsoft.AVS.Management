@@ -1604,6 +1604,17 @@ function New-VmfsVmSnapshot {
     foreach ($Vm in $Vms) {
         $timeStamp = Get-Date -Format o | ForEach-Object { $_ -replace ":", "-" }
         $SnapshotName = $Vm.Name + "-" + $timeStamp 
+        
+        if (!$Vm.ExtensionData) {
+            Write-Host "Skipping to create snapshot of virtual machine $($Vm.Name), becuase of unavailable configuration."
+            continue
+        }
+
+        if (($Vm.ExtensionData.OverallStatus -ne "green") -or ($Vm.ExtensionData.guestHeartbeatStatus -ne "green")) {
+            Write-Host "Skipping to create snapshot of virtual machine $($Vm.Name) becuase health status is not OK."
+            continue
+        }
+           
         try {
             $Snapshot = New-Snapshot -VM $Vm -Quiesce -Name $SnapshotName -ErrorAction Ignore
             Write-Host "Snapshot $($Snapshot.Name) created."
