@@ -1220,7 +1220,7 @@ function Get-VmfsHosts {
     $VmHosts = $Cluster | Get-VMHost 
 
     foreach ($VmHost in $VmHosts) {
-
+        $Datastores = $VmHost | Get-Datastore | Where-Object { $_.Type -match "VMFS" } | Select-Object select -ExpandProperty Name 
         $NamedOutputs[$VmHost.Name] = "
      {     
       Name : $($VmHost.Name),
@@ -1230,7 +1230,7 @@ function Get-VmfsHosts {
       State : $($VmHost.State),
       HostNQN : $($VmHost.ExtensionData.Hardware.SystemInfo.QualifiedName.Value),       
       Uuid : $($VmHost.ExtensionData.Hardware.SystemInfo.Uuid), 
-      Datastores: $($VmHost.ExtensionData.Datastore),
+      Datastores: $($Datastores),
       Extension : $($VmHost.ExtensionData.config.StorageDevice.NvmeTopology | ConvertTo-JSON -Depth 2)
      }"
     }
