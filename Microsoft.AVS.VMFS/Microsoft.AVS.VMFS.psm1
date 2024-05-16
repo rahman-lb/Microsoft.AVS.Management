@@ -1151,6 +1151,7 @@ function Get-VmfsDatastore {
     $NamedOutputs = @{}
 
     foreach ($Datastore in $Datastores) {
+        $Hosts = Get-VMHost -Datastore $Datastore.Name  | Select-Object select -ExpandProperty Name -ErrorAction Ignore
         $VmfsUuid = $Datastore.ExtensionData.info.Vmfs.uuid 
         $HostViewDiskName = $Datastore.ExtensionData.Info.vmfs.extent[0].Diskname;
         $NamedOutputs[$Datastore.Name] = "
@@ -1161,7 +1162,8 @@ function Get-VmfsDatastore {
            Type : $($Datastore.Type),
            UUID : $($VmfsUuid),
            Device : $($HostViewDiskName),      
-           State : $($Datastore.State),      
+           State : $($Datastore.State),
+           Hosts : $($Hosts),      
            }"
     }
   
