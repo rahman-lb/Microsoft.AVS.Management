@@ -1163,7 +1163,7 @@ function Get-VmfsDatastore {
            UUID : $($VmfsUuid),
            Device : $($HostViewDiskName),      
            State : $($Datastore.State),
-           Hosts : $($Hosts)      
+           Hosts : $($Hosts),      
            }"
     }
   
