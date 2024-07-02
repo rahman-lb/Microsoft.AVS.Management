@@ -414,10 +414,6 @@ function Restore-VmfsVolume {
         $DatastoreName
     )
 
-    if ($DeviceNaaId -notlike 'naa.624a9370*') {
-        throw "Invalid Device NAA ID $DeviceNaaId provided."
-    }
-
     $Cluster = Get-Cluster -Name $ClusterName -ErrorAction Ignore
     if (-not $Cluster) {
         throw "Cluster $ClusterName does not exist."
